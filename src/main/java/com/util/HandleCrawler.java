@@ -27,7 +27,7 @@ public class HandleCrawler {
 //                String runString = getRunString(html);
 //                String function = html.substring(html.indexOf("function")).replace("</script> </body></html>", runString + ";").replace("eval(\"qo=eval;qo(po);\")", "return po");
                 String functionFirst = handleFirst(html);
-                functionFirst = functionFirst.substring(0, functionFirst.indexOf("qq();")) + "qq();";
+                functionFirst = functionFirst.substring(0, functionFirst.indexOf("qaq();")) + "qaq();";
                 log.info("functionFirst is :" + functionFirst);
 
                 ScriptEngineManager m = new ScriptEngineManager(); //获取JavaScript执行引擎
@@ -35,7 +35,7 @@ public class HandleCrawler {
                 String origin = (String) engine.eval(functionFirst);
 
                 String secondName = origin.substring(4, origin.indexOf("="));
-                String functionSecond = handleSecond(origin, secondName);
+                String functionSecond = handleDocument(handleSecond(origin, secondName));
                 log.info("functionSecond is :" + functionSecond);
                 String real = (String) engine.eval(functionSecond);
                 String jslclearance = getJslclearance(real);
@@ -73,9 +73,9 @@ public class HandleCrawler {
     }
 
     private static String handleFirst(String html) {
-        String handleFirst = html.replace("eval(y.replace(/\\b\\w+\\b/g, function(y){return x[f(y,z)-1]||(\"_\"+y)}));break}catch(_){}", "function aa(){return y.replace(/\\b\\w+\\b/g, function(y){return x[f(y,z)-1]||(\"_\"+y)});}break}catch(_){}return aa();}qq();");
+        String handleFirst = html.replace("eval(y.replace(/\\b\\w+\\b/g, function(y){return x[f(y,z)-1]||(\"_\"+y)}));break}catch(_){}", "function aa(){return y.replace(/\\b\\w+\\b/g, function(y){return x[f(y,z)-1]||(\"_\"+y)});}break}catch(_){}return aa();}qaq();");
         String function = handleFirst.replace("<script>", "").replace("</script>", "");
-        return "function qq(){" + function;
+        return "function qaq(){" + function;
     }
 
     private static String handleSecond(String html, String name) {
@@ -84,7 +84,17 @@ public class HandleCrawler {
                 .replace("(window.headless+[]+[[]][0]).charAt(8)", "'d'")
                 .replace("window['__p'+'hantom'+'as']", "'f'")
                 .replace("(window['callP'+'hantom']+[]+[[]][0]).charAt(-~[-~[-~~~!{}+((+!-{})<<(+!-{}))+((+!-{})<<(+!-{}))]])", "'e'")
-                .replace("(window['callP'+'hantom']+[]).charAt(~~[])", "'u'");
+                .replace("(window['callP'+'hantom']+[]).charAt(~~[])", "'u'")
+                .replace(name + ".firstChild.href", "\"https:///\"")
+                .replace(name + ".match(/https?:\\/\\//)[0]", "\"https://\"");
+    }
+
+    private static String handleDocument(String html) {
+        if (html.contains("document.createElement") && html.contains("firstChild.href")) {
+            return html.replace(html.substring(html.indexOf("document.createElement"), html.indexOf("firstChild.href") + 15), "\"https:///\"");
+        } else {
+            return html;
+        }
     }
 
     private static String getJslclearance(String real) {

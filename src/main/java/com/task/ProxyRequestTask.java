@@ -66,6 +66,7 @@ public class ProxyRequestTask {
                         try {
                             String result = HttpRequestUtil.sendProxyGet(proxyIP.getAddress(), Integer.parseInt(proxyIP.getPort()), url, "");
                             if (!result.equals("false")) {
+                                Thread.sleep(10000);
                                 count++;
                                 log.info(url+"成功访问次数: " + count);
                                 log.info("代理IP：" + proxyIP.getAddress() + "   端口：" + proxyIP.getPort());
