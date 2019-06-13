@@ -92,7 +92,9 @@ public class HandleCrawler {
     private static String handleDocument(String html) {
         if (html.contains("document.createElement") && html.contains("firstChild.href")) {
             return html.replace(html.substring(html.indexOf("document.createElement"), html.indexOf("firstChild.href") + 15), "\"https:///\"");
-        } else {
+        } else if (html.contains("document.createElement")){
+            return html.replace(html.substring(html.indexOf("document.createElement"),html.indexOf("\"https:///\"")),"");
+        }else {
             return html;
         }
     }
