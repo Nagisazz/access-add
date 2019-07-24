@@ -68,7 +68,7 @@ public class ProxyGetUtil {
                 .header("Cookie", Constant.COOKIE)
                 .header("user-agent",
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0")
-                .timeout(5000)
+                .timeout(3000)
                 .get();
     }
 }

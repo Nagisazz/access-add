@@ -37,11 +37,15 @@ public class HandleCrawler {
                 String secondName = origin.substring(4, origin.indexOf("="));
                 String functionSecond = handleDocument(handleSecond(origin, secondName));
                 log.info("functionSecond is :" + functionSecond);
-                String real = (String) engine.eval(functionSecond);
-                String jslclearance = getJslclearance(real);
-                log.info("jslclearance is :" + jslclearance);
+                if (!functionSecond.contains("window")) {
+                    String real = (String) engine.eval(functionSecond);
+                    String jslclearance = getJslclearance(real);
+                    log.info("jslclearance is :" + jslclearance);
 
-                Constant.COOKIE = "__jsluid=" + jsluidCookie + "; __jsl_clearance=" + jslclearance;
+                    Constant.COOKIE = "__jsluid_h=" + jsluidCookie + "; __jsl_clearance=" + jslclearance;
+                } else {
+                    Thread.sleep(1000);
+                }
             }
         } catch (Exception e) {
             log.error("获取Cookie失败", e);
@@ -53,9 +57,10 @@ public class HandleCrawler {
         for (Header header : headers) {
             if (header.getName().equals("Set-Cookie")) {
                 jsluidCookie = header.getValue();
+                break;
             }
         }
-        Pattern pattern = Pattern.compile("(?<=__jsluid=).+?(?=; max-age=)");
+        Pattern pattern = Pattern.compile("(?<=__jsluid_h=).+?(?=; max-age=)");
         Matcher matcher = pattern.matcher(jsluidCookie);
         while (matcher.find()) {
             jsluidCookie = matcher.group(0);
@@ -92,9 +97,9 @@ public class HandleCrawler {
     private static String handleDocument(String html) {
         if (html.contains("document.createElement") && html.contains("firstChild.href")) {
             return html.replace(html.substring(html.indexOf("document.createElement"), html.indexOf("firstChild.href") + 15), "\"https:///\"");
-        } else if (html.contains("document.createElement")){
-            return html.replace(html.substring(html.indexOf("document.createElement"),html.indexOf("\"https:///\"")),"");
-        }else {
+        } else if (html.contains("document.createElement")) {
+            return html.replace(html.substring(html.indexOf("document.createElement"), html.indexOf("\"https:///\"")), "");
+        } else {
             return html;
         }
     }
