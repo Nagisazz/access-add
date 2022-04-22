@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- scan是否扫描配置文件变更，若为真则会定时扫描本地配置文件变更并更新对应配置；scanPeriod定时扫描间隔；debug是否输出logback框架内部的调试日志 -->
+<configuration scan="true" scanPeriod="60 second" debug="false">
+    <property name="LOG_HOME" value="/nagisa/logs/accessadd"/>
+
+    <!-- springboot的level在application.yml中配置，且必须用springProperty配置；若非springboot项目请使用property标签 -->
+    <springProperty scope="context" name="LOG_LEVEL_ROOT" source="logback.level.root" defaultValue="info"/>
+    <springProperty scope="context" name="LOG_LEVEL_COMMON" source="logback.level.common" defaultValue="info"/>
+    <property name="APP_NAME" value="accessadd"/>
+
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <!-- 控制台输出（控制台输出是加锁的，所以大量的日志输出会出现锁竞争，影响运行效率） -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-5level] [%-5thread] %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- 普通日志输出文件 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_HOME}/${APP_NAME}_stdout.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/${APP_NAME}_stdout.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!-- 最大日志保留天数，可以根据实际需要调整 -->
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-5level] [%-5thread] %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- 错误日志输出文件 -->
+    <appender name="FILE-ERROR"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>error</level>
+        </filter>
+        <File>${LOG_HOME}/${APP_NAME}_stderr.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/${APP_NAME}_stderr.%d{yyyy-MM-dd}.log</FileNamePattern>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-5level] [%-5thread] %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- 默认jdbc日志输出文件 -->
+    <appender name="FILE-JDBC"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 集群部署日志名建议加上ip和port -->
+        <File>${LOG_HOME}/${APP_NAME}_jdbc_${IP}_${PORT}.log</File>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%-5level] [%-5thread] [%X{request.url}] %logger{20} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>debugger</level>
+        </filter>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}_jdbc.%d{yyyy-MM-dd}_${IP}_${PORT}.log</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <!-- 关闭不常用日志输出 BEGIN -->
+    <!-- druid线程池相关日志（若使用的其他线程池组件，请更换包路径） -->
+    <logger name="com.alibaba.druid.pool" level="off" />
+    <!-- 关闭不常用日志输出 END -->
+
+    <!-- log4jdbc相关配置 BEGIN -->
+    <!-- jdbc相关无用输出 -->
+    <logger name="jdbc.connection" level="off"/>
+    <logger name="jdbc.audit" level="off"/>
+    <logger name="jdbc.resultset" level="off"/>
+    <logger name="jdbc.resultsettable" level="off"/>
+    <!-- 执行脚本前输出日志-不包含执行时间（sql执行失败时jdbc.sqltiming是不会输出的，可以使用jdbc.sqlonly来控制脚本输出。他俩一个是在执行sql前输出，一个是在执行sql后输出） -->
+    <!-- 执行脚本前输出日志-不包含执行时间（sql执行失败时jdbc.sqltiming是不会输出的，可以使用jdbc.sqlonly来控制脚本输出。他俩一个是在执行sql前输出，一个是在执行sql后输出） -->
+    <!-- 执行脚本前输出日志-不包含执行时间（sql执行失败时jdbc.sqltiming是不会输出的，可以使用jdbc.sqlonly来控制脚本输出。他俩一个是在执行sql前输出，一个是在执行sql后输出） -->
+        <logger name="jdbc.sqlonly" level="off" additivity="false">
+            <appender-ref ref="stdout"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+
+    <!-- 执行脚本后输出日志-包含执行时间 -->
+    <logger name="jdbc.sqltiming" level="debugger" additivity="false">
+        <!-- 调试程序时可以打开该选项，同步输出脚本信息到控制台，正式环境不要启用，影响效率 -->
+        <appender-ref ref="FILE-JDBC"/>
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+    <!-- log4jdbc相关配置 END -->
+    root
+    <!-- 各应用通用配置 BEGIN -->
+
+    <logger name="com.nagisazz" level="${LOG_LEVEL_COMMON}" additivity="false">
+        <!-- 调试程序时可以打开该选项，同步输出脚本信息到控制台 -->
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="FILE"/>
+        <!--        <appender-ref ref="FILE-JDBC"/>-->
+    </logger>
+
+    <!-- root节点配置不推荐修改，保持默认即可 -->
+    <!-- ${LOG_LEVEL_COMMON} 是在上面定义的变量 -->
+    <root level="${LOG_LEVEL_ROOT}">
+        <!-- 默认所有日志均输出至控制台（若针对指定包单独配置了logger，且对应additivity属性为false则会覆盖root的配置，所以也不会有大量日志输出到控制台） -->
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="FILE"/>
+        <!-- 错误级别的日志单独输出到指定文件，便于更专注的排查问题 -->
+        <!--        <appender-ref ref="FILE-ERROR"/>-->
+    </root>
+    <!-- 各应用通用配置 END -->
+</configuration>
