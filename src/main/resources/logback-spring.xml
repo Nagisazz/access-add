@@ -17,7 +17,7 @@
 	<contextName>ticket-report</contextName>
 	
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
-    <property name="LOG_HOME" value="/nagisa/logs/livestore" />
+    <property name="LOG_HOME" value="/nagisa/logs/access-add" />
     <!-- 控制台输出 -->   
     <!--<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
         <!--<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"> -->
