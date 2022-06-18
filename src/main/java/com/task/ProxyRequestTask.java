@@ -3,9 +3,8 @@ package com.task;
 import com.entity.ProxyIP;
 import com.util.HttpRequestUtil;
 import com.util.ProxyGetUtil;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -45,6 +44,7 @@ public class ProxyRequestTask {
             visit(url, proxyUrl, number);
         }
 
+        @SneakyThrows
         public void visit(String url, String proxyUrl, int number) {
             String oriProxyUrl = proxyUrl;
             List<ProxyIP> ipList = ProxyGetUtil.getProxyIP(proxyUrl);
@@ -61,14 +61,14 @@ public class ProxyRequestTask {
                 for (ProxyIP proxyIP : ipList) {
                     if (count < number) {
                         now++;
-                        log.info("现在是"+url+"第 " + now + " 次访问");
+                        log.info("现在是" + url + "第 " + now + " 次访问");
                         log.info("使用的代理为------" + proxyIP.getAddress() + ":" + proxyIP.getPort());
                         try {
                             String result = HttpRequestUtil.sendProxyGet(proxyIP.getAddress(), Integer.parseInt(proxyIP.getPort()), url, "");
                             if (!result.equals("false")) {
                                 Thread.sleep(10000);
                                 count++;
-                                log.info(url+"成功访问次数: " + count);
+                                log.info(url + "成功访问次数: " + count);
                                 log.info("代理IP：" + proxyIP.getAddress() + "   端口：" + proxyIP.getPort());
                             } else {
                                 log.info("代理GET请求发送异常！");
@@ -78,19 +78,21 @@ public class ProxyRequestTask {
 
                         }
                         log.info("--------本次访问结束--------\n");
-                    }else {
+                    } else {
                         status = 0;
                         break;
                     }
                 }
                 log.info("--------第" + i + "批代理IP访问结束--------\n");
-                if (status == 0){
+                if (status == 0) {
                     break;
                 }
+
+                Thread.sleep(10 * 60 * 1000);
                 ipList = ProxyGetUtil.getProxyIP(proxyUrl);
             }
 
-            log.info("--------"+url+"访问结束，共访问了"+count+"次--------\n");
+            log.info("--------" + url + "访问结束，共访问了" + count + "次--------\n");
         }
     }
 
